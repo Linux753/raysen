@@ -1,10 +1,11 @@
 pub mod sphere;
-use sphere::Sphere;
-use crate::point::Point;
 
+use std::rc::Rc;
+
+use sphere::Sphere;
+use crate::{point::Point, material::Texture};
 use super::Ray;
 
-#[derive(Clone)]
 pub struct Record {
     pub t : f64,
     pub p : Point<f64>,
@@ -39,7 +40,7 @@ pub enum Surface {
 }
 
 pub struct World {
-    pub objects : Vec<Surface>,
+    pub objects : Vec<(Surface, Rc<Texture>)>,
 }
 
 impl World {
@@ -48,8 +49,8 @@ impl World {
             objects : Vec::new()
         }
     }
-    pub fn add_sphere(&mut self, center : Point<f64>, radius : f64){
-        self.objects.push(Surface::Sphere(Sphere::new(center,radius)));
+    pub fn add_sphere(&mut self, center : Point<f64>, radius : f64, texture : Rc<Texture>){
+        self.objects.push((Surface::Sphere(Sphere::new(center,radius)), texture));
     }
 }
 

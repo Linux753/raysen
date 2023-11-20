@@ -8,7 +8,14 @@ pub struct Color<T : Copy> {
 
 impl Color<f64> {
     pub fn write(self, sample_number : u32){
-        println!("{} {} {}", ((self.r/sample_number as f64)*255.0) as u16, ((self.g/sample_number as f64)*255.0) as u16, ((self.b/sample_number as f64)*255.0) as u16);
+        let scale : f64 = 1./sample_number as f64;
+        //Applying the Gamma correction
+        let r = (scale*self.r).sqrt();
+        let g = (scale*self.g).sqrt();
+        let b = (scale*self.b).sqrt();
+        
+        //Printing
+        println!("{} {} {}", (r*255.0) as u16, (g*255.0) as u16, (b*255.0) as u16);
     }
 }
 
@@ -20,6 +27,30 @@ impl<T : Copy + Mul<Output = T> > Mul<T> for Color<T> {
             r: self.r*rhs,
             g: self.g*rhs,
             b: self.b*rhs,
+        }
+    }
+}
+
+impl<T : Mul<Output = T> + Copy> Mul<Self> for Color<T> {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Color {
+            r: self.r*rhs.r,
+            g: self.g*rhs.g,
+            b: self.b*rhs.b,
+        }
+    }
+}
+
+impl<T : Mul<Output = T> + Copy> Mul<&Self> for Color<T> {
+    type Output = Self;
+
+    fn mul(self, rhs: &Self) -> Self::Output {
+        Color {
+            r: self.r*rhs.r,
+            g: self.g*rhs.g,
+            b: self.b*rhs.b,
         }
     }
 }
@@ -36,10 +67,10 @@ impl Mul<Color<f64>> for f64 {
     }
 }
 
-impl Add<Color<f64>> for Color<f64> {
-    type Output = Color<f64>;
+impl<T : Add<Output = T> + Copy> Add<Color<T>> for Color<T> {
+    type Output = Color<T>;
 
-    fn add(self, rhs: Color<f64>) -> Self::Output {
+    fn add(self, rhs: Color<T>) -> Self::Output {
         Color {
             r: self.r+rhs.r,
             g: self.g+rhs.g,

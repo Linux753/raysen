@@ -11,9 +11,9 @@ pub struct Point<T : Copy> {
 impl Point<f64> {
     pub fn random(min : f64, max : f64) -> Point<f64> {
         Point {
-            x: rand::random::<f64>()*max+min,
-            y: rand::random::<f64>()*max+min,
-            z: rand::random::<f64>()*max+min,
+            x: (rand::random::<f64>()*(max-min))+min,
+            y: (rand::random::<f64>()*(max-min))+min,
+            z: (rand::random::<f64>()*(max-min))+min,
         }
     }
     pub fn random_in_sphere(radius : f64) -> Point<f64> {
@@ -25,12 +25,15 @@ impl Point<f64> {
             return p;
         }
     }
+    pub fn random_unit_in_sphere(radius : f64) -> Point<f64> {
+        Point::random_in_sphere(radius).unit()
+    }
     pub fn unit(&self) -> Point<f64> {
         (*self)/(self.norm())
     }
 
     pub fn norm_squared(&self) -> f64 {
-        ((*self)&(*self))
+        (*self)&(*self)
     }
 
     pub fn norm(&self) -> f64 {
@@ -128,5 +131,15 @@ impl Mul<u32> for Point<f64> {
             y:self.y*(rhs as f64),
             z:self.z*(rhs as f64),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    pub fn test_random() {
+        
     }
 }

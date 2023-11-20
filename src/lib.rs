@@ -2,10 +2,14 @@ pub mod point;
 pub mod color;
 pub mod ray;
 pub mod world;
+pub mod material;
+
 use rand::prelude::*;
+use std::rc::Rc;
 
 use point::Point;
 use ray::Ray;
+use material::Texture;
 
 use crate::{world::World, color::Color};
 
@@ -86,16 +90,25 @@ pub fn run() {
     let sample_per_pixel = 100;
 
     let mut world = World::new();
-    world.add_sphere(Point { x: 0.0, y: -0.5, z: -3.0 }, 0.5);
-    world.add_sphere(Point { x: 2.0, y: -0.5, z: -3.0 }, 0.5);
-    world.add_sphere(Point { x: -2.0, y: 0.0, z: -3.0 }, 1.);
-    world.add_sphere(Point { x: 0.0, y: -101., z: -3. }, 100.);
+
+    let bleu_dif = Rc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color { r: 0.3, g: 0.05, b: 0.4 })));
+    let gris_dif = Rc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color { r: 0.5, g: 0.5, b: 0.5 })));
+    let jaune_dif = Rc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color {r:0.4, g: 0.6, b: 0.1})));
+    world.add_sphere(Point { x: 0.0, y: -0.5, z: -3.0 }, 0.5, Rc::clone(&gris_dif));
+    world.add_sphere(Point { x: 1.0, y: -0.5, z: -3.0 }, 0.5, Rc::clone(&bleu_dif));
+    world.add_sphere(Point { x: -2.0, y: 0.0, z: -3.0 }, 1., Rc::clone(&jaune_dif));
+    world.add_sphere(Point { x: 0.0, y: -101., z: -3. }, 100., Rc::clone(&gris_dif));
+
+    for _ in 0..100 {
+        let point = Point::random_in_sphere(1.);
+        eprintln!("x: {}, y : {}, z: {}" , point.x, point.y, point.z);
+    }
 
     for j in 0..camera.image_height {
         eprintln!("Rendering line {}", j+1);
         for i in 0..img_width {
             let mut color = Color {r : 0., g : 0., b:0.};
-            for k in 0..sample_per_pixel {
+            for _ in 0..sample_per_pixel {
                 color = color + camera.pixel_ray(i, j).color(&world);
             }
             color.write(sample_per_pixel);

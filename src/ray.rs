@@ -1,6 +1,9 @@
+use std::rc::Rc;
+
+use crate::material::{Texture, Material};
 use crate::point::Point;
 use crate::color::Color;
-use crate::world::{World, Hitable, Record, Surface};
+use crate::world::{World, Hitable, Surface};
 pub struct Ray{
     orig : Point<f64>,
     dir : Point<f64>,
@@ -14,6 +17,10 @@ impl Ray {
             dir,
             depth,
         }
+    }
+
+    pub fn get_depth(&self) -> u32 {
+        self.depth
     }
     
     pub fn dir(&self) -> &Point<f64> {
@@ -34,21 +41,21 @@ impl Ray {
             return Color {r: 0., g: 0., b: 0.};
         }
         let t_max = f64::MAX;
-        let t_min = 0.01;
-        let mut best_t : Option<(f64, &Surface)> = None;
+        let t_min = 0.001;
+        let mut best_t : Option<(f64, &Surface, Rc<Texture>)> = None;
 
-        for surface in &world.objects {
+        for (surface, texture) in &world.objects {
             match &surface {
                 &Surface::Sphere(sphere) => {
                     if let Some(t) = sphere.hit(&self, t_min, t_max) {
                         best_t = match best_t {
-                            None => Some((t, surface)),
-                            Some((best, obj)) => {
-                                if best>t {
-                                    Some((t, surface))
+                            None => Some((t, surface, Rc::clone(texture))),
+                            Some((best_t, best_surf, best_text)) => {
+                                if best_t>t {
+                                    Some((t, surface, Rc::clone(texture)))
                                 }
                                 else{
-                                    Some((best, obj))
+                                    Some((best_t, best_surf, best_text))
                                 }
                             }
                         };
@@ -62,13 +69,15 @@ impl Ray {
                 let a : f64 = (unit_dir.y+1.0)*0.5;
                 Color {r: 1.0, g: 1.0, b: 1.0}*(1.0-a) + a*Color { r: 0.5, g: 0.7, b: 1.0 }
             }
-            Some((t, obj)) => {
-                let best_record = match obj {
+            Some((t, surface, texture)) => {
+                let best_record = match surface {
                     Surface::Sphere(sphere) => sphere.get_records(&self, t)
                 };
 
-                let target = best_record.p + best_record.normal + Point::random_in_sphere(1.);
-                0.5*Ray::new(best_record.p, target-best_record.p, self.depth+1).color(world)
+                let (ray, color) = match texture.as_ref() {
+                    Texture::Diffuse(diffuse) => diffuse.scatter(self, best_record),
+                };
+                ray.color(world)*color
                 //let dir_col = (best_record.normal+Point { x: 1.0, y: 1.0, z: 1.0 })*0.5;
                 //return Color {r: dir_col.x, g:dir_col.y, b:dir_col.z};
             }
