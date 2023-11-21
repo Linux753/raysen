@@ -39,6 +39,11 @@ impl Point<f64> {
     pub fn norm(&self) -> f64 {
         ((*self)&(*self)).sqrt()
     }
+
+    pub fn near_zero(&self) -> bool {
+        let s : f64 = 1e-8;
+        (self.x.abs() < s) && (self.y.abs() < s) && (self.z.abs() < s)
+    }
 }
 
 impl<T: Mul<Output = T> + Copy> Mul<Self> for Point<T> {

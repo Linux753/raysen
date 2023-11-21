@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::material::{Texture, Material};
+use crate::material::{Texture, Material, dielectric};
 use crate::point::Point;
 use crate::color::Color;
 use crate::world::{World, Hitable, Surface};
@@ -76,6 +76,8 @@ impl Ray {
 
                 let (ray, color) = match texture.as_ref() {
                     Texture::Diffuse(diffuse) => diffuse.scatter(self, best_record),
+                    Texture::Metal(metal) => metal.scatter(self, best_record),
+                    Texture::Dielectric(dielectric) => dielectric.scatter(self, best_record),
                 };
                 ray.color(world)*color
                 //let dir_col = (best_record.normal+Point { x: 1.0, y: 1.0, z: 1.0 })*0.5;

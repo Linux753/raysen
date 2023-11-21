@@ -78,7 +78,7 @@ impl Camera{
 
 pub fn run() {
     //Init the ppm format
-    let img_width : u32 = 700;
+    let img_width : u32 = 1000 ;
     let max : u32 = 255;
 
     let camera : Camera = Camera::new(img_width, 16.0/9.0);
@@ -94,7 +94,13 @@ pub fn run() {
     let bleu_dif = Rc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color { r: 0.3, g: 0.05, b: 0.4 })));
     let gris_dif = Rc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color { r: 0.5, g: 0.5, b: 0.5 })));
     let jaune_dif = Rc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color {r:0.4, g: 0.6, b: 0.1})));
-    world.add_sphere(Point { x: 0.0, y: -0.5, z: -3.0 }, 0.5, Rc::clone(&gris_dif));
+    let bleu_met = Rc::new(Texture::Metal(material::metal::Metal::new(Color { r: 0.75, g: 0.75, b: 0.95 }, 0.0)));
+    let rouge_met = Rc::new(Texture::Metal(material::metal::Metal::new(Color { r: 0.95, g: 0.1, b: 0.05 }, 0.15)));
+    let verre = Rc::new(Texture::Dielectric(material::dielectric::Dielectric::new(1.5)));
+
+    world.add_sphere(Point { x: 0.0, y: -0.5, z: -3.1 }, 0.5, Rc::clone(&verre));
+    world.add_sphere(Point { x: -1.0, y: -0.7, z: -3.0 }, 0.2, Rc::clone(&bleu_met));
+    world.add_sphere(Point { x: -0.0, y: -0.8, z: -4.3 }, 0.2, Rc::clone(&rouge_met));
     world.add_sphere(Point { x: 1.0, y: -0.5, z: -3.0 }, 0.5, Rc::clone(&bleu_dif));
     world.add_sphere(Point { x: -2.0, y: 0.0, z: -3.0 }, 1., Rc::clone(&jaune_dif));
     world.add_sphere(Point { x: 0.0, y: -101., z: -3. }, 100., Rc::clone(&gris_dif));
