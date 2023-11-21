@@ -52,6 +52,22 @@ impl World {
     pub fn add_sphere(&mut self, center : Point<f64>, radius : f64, texture : Rc<Texture>){
         self.objects.push((Surface::Sphere(Sphere::new(center,radius)), texture));
     }
+
+    pub fn add_sphere_without_collision(&mut self, center : Point<f64>, radius : f64, texture : Rc<Texture>) -> bool {
+        for (object, _) in &self.objects {
+            match object {
+                Surface::Sphere(sphere) => {
+                    if (center-sphere.get_center()).norm() < (radius+sphere.get_radius()) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        self.add_sphere(center, radius, texture);
+
+        return true;
+    }
 }
 
 

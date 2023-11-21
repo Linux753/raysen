@@ -15,6 +15,14 @@ impl Sphere {
             radius
         };
     }
+
+    pub fn get_radius(&self) -> f64 {
+        self.radius
+    }
+
+    pub fn get_center(&self) -> Point<f64> {
+        self.center
+    }
 }
 
 impl Hitable for  Sphere {
