@@ -16,6 +16,13 @@ impl Point<f64> {
             z: (rand::random::<f64>()*(max-min))+min,
         }
     }
+
+    pub fn random_in_circle(radius : f64) -> Point<f64> {
+        Point { x: rand::random::<f64>()*2.-1.,
+            y: rand::random::<f64>()*2.-1.,
+            z: 0. } * radius
+    }
+
     pub fn random_in_sphere(radius : f64) -> Point<f64> {
         loop {
             let p = Point::random(-radius, radius);

@@ -16,7 +16,12 @@ use crate::{world::World, color::Color};
 pub struct Camera {
     center : Point<f64>,
     dir : Point<f64>,
-    focal_lenght : f64,
+    lens_radius : f64,
+    focus_dist : f64,
+
+    w : Point<f64>, //Looking direction vector (unit)
+    u : Point<f64>, //Horizontal direction vector (unit)
+    v : Point<f64>, //Vertical direction vector (unit)
 
     viewport_width : f64,
     viewport_height : f64,
@@ -29,16 +34,15 @@ pub struct Camera {
 }
 
 impl Camera{
-    pub fn new(origin : Point<f64>, lookat : Point<f64> , image_width : u32, aspect_ratio : f64, vfov : f64) -> Camera {
+    pub fn new(origin : Point<f64>, lookat : Point<f64> , image_width : u32, aspect_ratio : f64, vfov : f64, aperture : f64, focus_dist : f64) -> Camera {
         let image_height : u32 = ((image_width as f64)/aspect_ratio) as u32;
 
 
         let theta = vfov.to_radians();
-        let h = (theta/2.).tan();
+        let h = (theta/2.).tan()*focus_dist;
         let viewport_height = 2.0*h;
         let viewport_width = viewport_height*((image_width as f64)/(image_height as f64));
         
-        let focal_lenght = 1.;
         let center : Point<f64> = origin;
         let look_dir : Point<f64> = (lookat-center).unit();
         let up : Point<f64> = Point { x: 0., y: 1., z: 0. };
@@ -51,7 +55,7 @@ impl Camera{
         let pixel_delta_u = viewport_u/(image_width as f64);
         let pixel_delta_v = viewport_v/(image_height as f64);
 
-        let pixel_up_left = center + look_dir - viewport_u/2.0 - viewport_v/2.0;
+        let pixel_up_left = center + look_dir*focus_dist - viewport_u/2.0 - viewport_v/2.0;
         let pixel00_loc = pixel_up_left + pixel_delta_u*0.5 + pixel_delta_v*0.5;
 
 
@@ -59,7 +63,13 @@ impl Camera{
         Camera { 
             center, 
             dir : look_dir,
-            focal_lenght,
+            lens_radius : aperture/2.0,
+            focus_dist,
+
+            w : look_dir,
+            v : vup,
+            u : uup,
+
             viewport_width,
             viewport_height,
             pixel_delta_u,
@@ -72,17 +82,23 @@ impl Camera{
     }
 
     pub fn pixel_ray(&self, i : u32, j:u32) -> Ray {
+        //Antialiasing random on the position of the pixel center
         let mut rng = rand::thread_rng();
         let alpha : f64 = rng.gen::<f64>() - 0.5;
         let beta : f64 = rng.gen::<f64>() - 0.5;
-        let pixel_center = self.pixel00_loc + self.pixel_delta_u*i + self.pixel_delta_u*alpha + self.pixel_delta_v*j + self.pixel_delta_v*beta;
-        let dir = pixel_center - self.center;
-        Ray::new(pixel_center, dir, 0)
+        
+        //Focus distance : random on the position of the pixel origin
+        let rd = Point::random_in_circle(self.lens_radius);
+        let offset = self.u * rd.x + self.v * rd.y;
+
+        let ray_origin = self.center + offset;
+        let dir = self.pixel00_loc + self.pixel_delta_u*i + self.pixel_delta_u*alpha  + self.pixel_delta_v*j + self.pixel_delta_v*beta - ray_origin;
+        Ray::new(ray_origin, dir, 0)
     }
 }
 
 pub fn scene1(img_width : u32) -> (Camera, World) {
-    let camera : Camera = Camera::new(Point { x: 1., y: 0.5, z: 2. },Point { x: 0.0, y: -0.5, z: -3.0 } , img_width, 16.0/9.0, 45.);
+    let camera : Camera = Camera::new(Point { x: 1., y: 0.5, z: 2. },Point { x: 0.0, y: -0.5, z: -3.0 } , img_width, 16.0/9.0, 45., 0.2, 5.0);
 
     let mut world = World::new();
 
@@ -98,14 +114,14 @@ pub fn scene1(img_width : u32) -> (Camera, World) {
     world.add_sphere(Point { x: -1.0, y: -0.8, z: -3.0 }, 0.2, Rc::clone(&bleu_met));
     world.add_sphere(Point { x: -0.0, y: -0.8, z: -4.3 }, 0.2, Rc::clone(&rouge_met));
     world.add_sphere(Point { x: 1.0, y: -0.5, z: -3.0 }, 0.5, Rc::clone(&bleu_dif));
-    world.add_sphere(Point { x: -2.0, y: 0.0, z: -3.0 }, 1., Rc::clone(&jaune_dif));
+    world.add_sphere(Point { x: -2.0, y: 0.0, z: -4.5 }, 1., Rc::clone(&jaune_dif));
     world.add_sphere(Point { x: 0.0, y: -1001., z: -3. }, 1000., Rc::clone(&gris_dif));
 
     (camera, world)
 }
 
 pub fn scene2(img_width : u32) -> (Camera, World) {
-    let camera : Camera = Camera::new(Point { x: -1., y: 1.5, z: 2. },Point { x: -1.0, y: 0.75, z: -3.0 } , img_width, 16.0/9.0, 30.);
+    let camera : Camera = Camera::new(Point { x: -1., y: 1.5, z: 2. },Point { x: -1.0, y: 0.75, z: -3.0 } , img_width, 16.0/9.0, 30., 0.08, 5.90);
 
     let mut world = World::new();
 
