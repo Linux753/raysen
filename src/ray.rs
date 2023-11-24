@@ -1,4 +1,6 @@
-use std::rc::Rc;
+
+
+use std::sync::Arc;
 
 use crate::material::{Texture, Material, dielectric};
 use crate::point::Point;
@@ -42,17 +44,17 @@ impl Ray {
         }
         let t_max = f64::MAX;
         let t_min = 0.001;
-        let mut best_t : Option<(f64, &Surface, Rc<Texture>)> = None;
+        let mut best_t : Option<(f64, &Surface, Arc<Texture>)> = None;
 
         for (surface, texture) in &world.objects {
             match &surface {
                 &Surface::Sphere(sphere) => {
                     if let Some(t) = sphere.hit(&self, t_min, t_max) {
                         best_t = match best_t {
-                            None => Some((t, surface, Rc::clone(texture))),
+                            None => Some((t, surface, Arc::clone(texture))),
                             Some((best_t, best_surf, best_text)) => {
                                 if best_t>t {
-                                    Some((t, surface, Rc::clone(texture)))
+                                    Some((t, surface, Arc::clone(texture)))
                                 }
                                 else{
                                     Some((best_t, best_surf, best_text))

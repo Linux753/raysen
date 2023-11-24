@@ -1,6 +1,6 @@
 pub mod sphere;
 
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use sphere::Sphere;
 use crate::{point::Point, material::Texture};
@@ -40,7 +40,7 @@ pub enum Surface {
 }
 
 pub struct World {
-    pub objects : Vec<(Surface, Rc<Texture>)>,
+    pub objects : Vec<(Surface, Arc<Texture>)>,
 }
 
 impl World {
@@ -49,11 +49,11 @@ impl World {
             objects : Vec::new()
         }
     }
-    pub fn add_sphere(&mut self, center : Point<f64>, radius : f64, texture : Rc<Texture>){
+    pub fn add_sphere(&mut self, center : Point<f64>, radius : f64, texture : Arc<Texture>){
         self.objects.push((Surface::Sphere(Sphere::new(center,radius)), texture));
     }
 
-    pub fn add_sphere_without_collision(&mut self, center : Point<f64>, radius : f64, texture : Rc<Texture>) -> bool {
+    pub fn add_sphere_without_collision(&mut self, center : Point<f64>, radius : f64, texture : Arc<Texture>) -> bool {
         for (object, _) in &self.objects {
             match object {
                 Surface::Sphere(sphere) => {

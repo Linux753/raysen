@@ -1,7 +1,7 @@
 # Raysen : 
 
 ## What is this ?
-This is an implementation in Rust of a ray-tracer following (for the moment) the tutorial : 
+This is an implementation in Rust of a multithreaded ray-tracer following (for the moment) the tutorial : 
 
 [_https://github.com/RayTracing/raytracing.github.io_](https://github.com/RayTracing/raytracing.github.io)
 
