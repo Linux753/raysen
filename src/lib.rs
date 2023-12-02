@@ -103,7 +103,7 @@ pub fn scene1(img_width : u32) -> (Camera, World) {
     let mut world = World::new();
 
     let bleu_dif = Arc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color { r: 0.3, g: 0.05, b: 0.4 })));
-    let gris_dif = Arc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color { r: 0.5, g: 0.5, b: 0.5 })));
+    let gris_dif: Arc<Texture> = Arc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color { r: 0.5, g: 0.5, b: 0.5 })));
     let jaune_dif = Arc::new(Texture::Diffuse(material::diffuse::Diffuse::new(Color {r:0.4, g: 0.6, b: 0.1})));
     let bleu_met = Arc::new(Texture::Metal(material::metal::Metal::new(Color { r: 0.75, g: 0.75, b: 0.95 }, 0.0)));
     let rouge_met = Arc::new(Texture::Metal(material::metal::Metal::new(Color { r: 0.95, g: 0.1, b: 0.05 }, 0.15)));

@@ -1,7 +1,9 @@
 
 
-use crate::{point::Point, ray::Ray};
-use super::{Hitable, Record};
+use std::sync::Arc;
+
+use crate::{point::Point, ray::Ray, material::Texture};
+use super::{Hitable, Record, aabb::Aabb};
 
 pub struct Sphere {
     center : Point<f64>,
@@ -14,6 +16,10 @@ impl Sphere {
             center,
             radius
         };
+    }
+
+    pub fn new_with_aabb(center : Point<f64>, radius : f64, texture : Arc<Texture>) -> Aabb {
+        Aabb::new_one(super::Surface::Sphere(Sphere::new(center, radius)), texture)
     }
 
     pub fn get_radius(&self) -> f64 {
@@ -55,5 +61,11 @@ impl Hitable for  Sphere {
         let outward_normal = (p-self.center)/self.radius;
 
         Record::new(r, t, p, outward_normal)
+    }
+
+    fn get_bb(&self) -> (Point<f64>, Point<f64>) {
+        let radius_vec : Point<f64> = Point { x: self.radius, y: self.radius, z: self.radius };
+        (self.center-radius_vec,
+        self.center+radius_vec)
     }
 }

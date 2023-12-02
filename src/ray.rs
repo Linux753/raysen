@@ -38,14 +38,12 @@ impl Ray {
         self.orig + self.dir*t
     }
 
-    pub fn color(self, world : &World) -> Color<f64> {
-        if self.depth > 50 {
-            return Color {r: 0., g: 0., b: 0.};
-        }
-        let t_max = f64::MAX;
-        let t_min = 0.001;
+    pub fn object_hitted<'a, 'b>(&'a self, world : &'b World) -> Option<(f64, &'b Surface, Arc<Texture>)> {
         let mut best_t : Option<(f64, &Surface, Arc<Texture>)> = None;
 
+        let t_max = f64::MAX;
+        let t_min = 0.001;
+        
         for (surface, texture) in &world.objects {
             match &surface {
                 &Surface::Sphere(sphere) => {
@@ -63,9 +61,33 @@ impl Ray {
                         };
                     }
                 }
+                &Surface::AABB(aabb) => {
+                    if let Some((res_t, res_surf, res_texture)) = aabb.hit(&self, t_min, t_max) {
+                        best_t = match best_t {
+                            None => Some((res_t, res_surf, res_texture)),
+                            Some((best_t, best_surf, best_text)) => {
+                                if best_t > res_t {
+                                    Some((res_t, res_surf, res_texture))
+                                }
+                                else {
+                                    Some((best_t, best_surf, best_text))
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
-        match best_t {
+
+        return best_t;
+    }
+
+    pub fn color(self, world : &World) -> Color<f64> {
+        if self.depth > 50 {
+            return Color {r: 0., g: 0., b: 0.};
+        }
+        
+        match self.object_hitted(world) {
             None => {
                 let unit_dir = self.dir.unit();
                 let a : f64 = (unit_dir.y+1.0)*0.5;
@@ -73,7 +95,8 @@ impl Ray {
             }
             Some((t, surface, texture)) => {
                 let best_record = match surface {
-                    Surface::Sphere(sphere) => sphere.get_records(&self, t)
+                    Surface::Sphere(sphere) => sphere.get_records(&self, t),
+                    _ => panic!("Shouldn't have an aabb as a result of object_hitted()")
                 };
 
                 let (ray, color) = match texture.as_ref() {
@@ -82,8 +105,6 @@ impl Ray {
                     Texture::Dielectric(dielectric) => dielectric.scatter(self, best_record),
                 };
                 ray.color(world)*color
-                //let dir_col = (best_record.normal+Point { x: 1.0, y: 1.0, z: 1.0 })*0.5;
-                //return Color {r: dir_col.x, g:dir_col.y, b:dir_col.z};
             }
         }
     }

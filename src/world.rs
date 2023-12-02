@@ -1,9 +1,12 @@
 pub mod sphere;
+pub mod aabb;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use sphere::Sphere;
-use crate::{point::Point, material::Texture};
+use crate::{point::Point, material::{Texture, diffuse::{self, Diffuse}}, color::Color};
+use self::aabb::Aabb;
+
 use super::Ray;
 
 pub struct Record {
@@ -33,24 +36,36 @@ impl Record {
 pub trait Hitable {
     fn hit(&self, r : &Ray, t_min : f64, t_max : f64) -> Option<f64>; 
     fn get_records(&self, r : &Ray, t : f64) -> Record;
+    fn get_bb(&self) -> (Point<f64>, Point<f64>);
 }
 
 pub enum Surface {
-    Sphere(Sphere)
+    Sphere(Sphere),
+    AABB(Aabb),
 }
 
 pub struct World {
+    pub default_texture : Arc<Texture>,
     pub objects : Vec<(Surface, Arc<Texture>)>,
 }
 
 impl World {
     pub fn new() -> World {
         World {
-            objects : Vec::new()
+            objects : Vec::new(),
+            default_texture : Arc::new(Texture::Diffuse(Diffuse::new(Color::<f64> {r:1.0, g:1.0, b:1.0}))),
         }
     }
+
+    pub fn new_from_vec(objects : Vec<(Surface, Arc<Texture>)>) -> World {
+        World {
+            objects,
+            default_texture : Arc::new(Texture::Diffuse(Diffuse::new(Color::<f64> {r:1.0, g:1.0, b:1.0}))),
+        }
+    }
+
     pub fn add_sphere(&mut self, center : Point<f64>, radius : f64, texture : Arc<Texture>){
-        self.objects.push((Surface::Sphere(Sphere::new(center,radius)), texture));
+        self.objects.push((Surface::Sphere(Sphere::new(center, radius)), texture));
     }
 
     pub fn add_sphere_without_collision(&mut self, center : Point<f64>, radius : f64, texture : Arc<Texture>) -> bool {
@@ -60,7 +75,8 @@ impl World {
                     if (center-sphere.get_center()).norm() < (radius+sphere.get_radius()) {
                         return false;
                     }
-                }
+                },
+                _ => ()
             }
         }
 
